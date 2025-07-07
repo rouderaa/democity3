@@ -15,7 +15,7 @@ model_name = 'assets/Models/fullmodel.glb'
 
 model_entity = Entity(
     model=model_name,
-    position=(1, 0, 1),
+    position=(-40, 0, 1),
     scale=1,
     collider=None
 )

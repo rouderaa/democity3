@@ -1,58 +1,53 @@
 from ursina import *
 from ursina.prefabs.editor_camera import EditorCamera
+from smoothcamera import SmoothEditorCamera
+from car import Car
 
-app = Ursina()
+# app = Ursina()
+app = Ursina(
+    title='City demo',
+    borderless=False,
+    fullscreen=False,
+    size=(1920, 1080),
+    vsync=True,
+    multisamples=4  # This enables antialiasing (MSAA)
+)
 
 # Add a simple sky and ground for reference
 Sky()
 ground = Entity(model='plane', scale=100, color=color.gray, collider='box')
 
 # Editor Camera
-editor_camera = EditorCamera(rotation_smoothing=2, panning_speed=4)
+# editor_camera = EditorCamera(rotation_smoothing=2, panning_speed=4)
+editor_camera = SmoothEditorCamera()
+editor_camera.y = 10
+editor_camera.x = -20
+editor_camera.z = -20
 
 # Load your GLB model (example: 'cube.glb' in the same folder)
-model_name = 'assets/Models/GLB format_roads/track-road-wide.glb'
+model_name = 'assets/Models/fullmodel.glb'
+model_colliders_name = 'assets/Models/fullmodel_colliders.glb'
 
-class grid (Entity):
-    def buildGrid(self):
-        self.grid_size = (5, 5)  # 5 x 5 grid
-        self.grid_spacing = 2
+model_entity = Entity(
+    model=model_name,
+    position=(-40, 0, 1),
+    scale=1,
+    collider=None
+)
 
-        # Get all filenames ending with .glb
-        assets_dir = 'assets/Models/GLB format_roads'
-        glb_files = [f for f in os.listdir(assets_dir) if f.endswith('.glb')]
-        track_files = [f for f in glb_files if 'track' in f.lower()]
-        model_entities = []
+# Note: y is vertical position in ursina
+model_colliders_entity = Entity(
+    model=model_colliders_name,
+    position=(-40, 1, 1),
+    scale=1,
+    color=color.green,
+    mode='wireframe',  # This enables wire rendering
+    visible=False
+)
 
-#        for track_file in track_files:
-#            print(f"Found track file: {track_file}")
+car_entity = Car()
 
-        index = 0
-        # Create a grid of model entities
-        for x in range(self.grid_size[0]):
-            for z in range(self.grid_size[1]):
-                model_name = track_files[index]
-                index = index + 1
-                if (index == len(track_files)):
-                    index = 0
-                model_entity = Entity(
-                    model=model_name,
-                    position=(x * self.grid_spacing, 0.5, z * self.grid_spacing),
-                    scale=1,
-                    collider=None
-                )
-                print(f'model_entity: {model_entity.bounds.size}')
-                model_entities.append(model_entity)
-                # print(model_entity.bounds.size)  # Print the size of the model entity
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.model = 'plane'
-        self.scale = 100
-        self.color = color.gray
-        self.collider = 'box'
-        self.buildGrid()
-
-gr = grid()
+print('Model:', car_entity.model)
+print('Model loaded:', car_entity.model in application.asset_folder.glob('**/*'))
 
 app.run()
