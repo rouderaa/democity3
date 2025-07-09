@@ -2,15 +2,20 @@ from ursina import *
 
 
 class Car(Entity):
-    def __init__(self, **kwargs):
+    def __init__(self, terrain_collider, **kwargs):
         super().__init__(**kwargs)
 
-        # Load the 3D model directly on self
-        # Debug path
-        model_path = 'assets/car.glb'
-        print('Looking for:', Path(model_path).resolve())
-        print('Exists:', Path(model_path).exists())
+        name = 'car'
+        self.hit_entity = None
+        self.visible_sensors = False
 
+        self.road_check_distance = 1.0  # How far down to cast the ray
+        self.terrain = terrain_collider
+
+        # Load the 3D model directly on self
+        model_path = 'assets/car.glb'
+        # print('Looking for:', Path(model_path).resolve())
+        # print('Exists:', Path(model_path).exists())
         self.model = model_path
 
         # Fallback for testing:
@@ -23,7 +28,7 @@ class Car(Entity):
         self.collider = 'box'  # or None if you don’t need collisions
 
         # Car properties
-        self.speed = 5  # Movement speed
+        self.speed = 1  # Movement speed
         self.rotation_speed = 90  # Rotation speed in degrees per second
 
         # Movement state
@@ -32,27 +37,17 @@ class Car(Entity):
         self.is_turning_left = False
         self.is_turning_right = False
 
-    def input(self, key):
-        """Handle key press and release events"""
-        if key == 'w':
-            self.is_moving_forward = True
-        elif key == 'w up':
-            self.is_moving_forward = False
+    def move_forward(self, m):
+        self.is_moving_forward = m
 
-        elif key == 's':
-            self.is_moving_backward = True
-        elif key == 's up':
-            self.is_moving_backward = False
+    def move_backward(self, m):
+        self.is_moving_backward = m
 
-        elif key == 'd':
-            self.is_turning_left = True
-        elif key == 'd up':
-            self.is_turning_left = False
+    def turn_left(self, r):
+        self.is_turning_left = r
 
-        elif key == 'a':
-            self.is_turning_right = True
-        elif key == 'a up':
-            self.is_turning_right = False
+    def turn_right(self, r):
+        self.is_turning_right = r
 
     def update(self):
         """Update car movement every frame"""
@@ -68,6 +63,37 @@ class Car(Entity):
         elif self.is_turning_right:
             self.rotation_y -= self.rotation_speed * time.dt
 
+        self.check_road_surface()
+
+    def check_road_surface(self):
+        """
+        Casts a ray downwards to detect the ground.
+        This can be used to check for different surface types or to align the car to the ground normal.
+        """
+        ray_origin = self.world_position
+
+        # Instead of searching the whole scene, this tells the raycast to ONLY
+        # check for hits against the entity stored in self.terrain.
+        # This is more efficient and solves the problem of detecting the correct ground mesh.
+        hit_info = raycast(
+            origin=ray_origin,
+            direction=self.down,
+            distance=self.road_check_distance,
+            ignore=[self, ],
+            traverse_target=self.terrain, # Only check against the terrain!
+            debug=self.visible_sensors
+        )
+        if hit_info.hit:
+            # The ray has hit something.
+            self.hit_entity = hit_info.entity
+        else:
+            self.hit_entity = None
+
+    def hit(self):
+        self.hit_entity.name
+
+    def show_sensor(self, v):
+        self.visible_sensors = v
 
 # Example usage:
 if __name__ == "__main__":
