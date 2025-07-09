@@ -1,5 +1,4 @@
 from ursina import *
-from ursina.prefabs.editor_camera import EditorCamera
 from smoothcamera import SmoothEditorCamera
 from car import Car
 
@@ -8,12 +7,13 @@ def print_tree(entity, indent=0):
     for child in entity.children:
         print_tree(child, indent + 2)
 
+
+# Create box colliders for each child
 def make_colliders():
-    # Create box colliders for each child
     colliders = []
 
     for child in model_colliders_entity.model.children:
-        print(f"Creating collider for: {child.name}")
+        # print(f"Creating collider for: {child.name}")
 
         # Create a box collider entity
         collider = Entity(
@@ -34,8 +34,7 @@ def make_colliders():
 
         # Store reference to the collider
         colliders.append(collider)
-
-        # Optional: Parent the collider to the main entity for easier management
+        # set parent
         collider.parent = model_colliders_entity
 
     print(f"Created {len(colliders)} box colliders")
@@ -115,29 +114,14 @@ model_colliders_entity = Entity(
     visible=False
 )
 
-
+# use the boxes in the model_colliders to create actual box colliders
 make_colliders()
 
-# model_colliders_entity1 = Entity(
-#     model='cube',          # Use a simple cube
-#     name='ground_cube',
-#     collider='box',        # A box collider is fine for a cube
-#     position=(0, 0, 0),    # Center it at the world origin
-#     scale=(100, 1, 100),   # Make it a huge, flat plane
-#     color=color.green,
-#     visible=False
-# )
-
-# Make sure the car starts above it
+# Make the car
 car_entity = Car(position=(0, 0, 0), terrain_collider=model_colliders_entity)
 
+# define the status lines on the screen
 position_display = Text(text='', position=window.top_left + Vec2(0.05, -0.05), scale=1.5)
 hits_display = Text(text='', position=window.top_left + Vec2(0.05, -0.10), scale=1.5)
-
-# print('DEBUG: Car is targeting ->', car_entity.terrain)
-# print('DEBUG: Target entity has collider ->', car_entity.terrain.collider)
-
-print('Model:', car_entity.model)
-print('Model loaded:', car_entity.model in application.asset_folder.glob('**/*'))
 
 app.run()

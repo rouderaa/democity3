@@ -1,6 +1,5 @@
 from ursina import *
 
-
 class Car(Entity):
     def __init__(self, terrain_collider, **kwargs):
         super().__init__(**kwargs)
@@ -10,12 +9,10 @@ class Car(Entity):
         self.visible_sensors = False
 
         self.road_check_distance = 1.0  # How far down to cast the ray
-        self.terrain = terrain_collider
+        self.terrain = terrain_collider # Model to use for detecting collisions
 
         # Load the 3D model directly on self
         model_path = 'assets/car.glb'
-        # print('Looking for:', Path(model_path).resolve())
-        # print('Exists:', Path(model_path).exists())
         self.model = model_path
 
         # Fallback for testing:
@@ -25,7 +22,7 @@ class Car(Entity):
 
         self.scale = 2
         self.rotation_y = 90
-        self.collider = 'box'  # or None if you don’t need collisions
+        self.collider = 'box'
 
         # Car properties
         self.speed = 1  # Movement speed
@@ -63,6 +60,7 @@ class Car(Entity):
         elif self.is_turning_right:
             self.rotation_y -= self.rotation_speed * time.dt
 
+        # Check for collisions with the model
         self.check_road_surface()
 
     def check_road_surface(self):
@@ -72,15 +70,13 @@ class Car(Entity):
         """
         ray_origin = self.world_position
 
-        # Instead of searching the whole scene, this tells the raycast to ONLY
-        # check for hits against the entity stored in self.terrain.
-        # This is more efficient and solves the problem of detecting the correct ground mesh.
+        # Cast a ray down from the car to the collision model
         hit_info = raycast(
             origin=ray_origin,
             direction=self.down,
             distance=self.road_check_distance,
             ignore=[self, ],
-            traverse_target=self.terrain, # Only check against the terrain!
+            traverse_target=self.terrain, # Only checks against the collision model
             debug=self.visible_sensors
         )
         if hit_info.hit:
