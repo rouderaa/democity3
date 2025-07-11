@@ -5,8 +5,11 @@ class Car(Entity):
         super().__init__(**kwargs)
 
         name = 'car'
-        self.hit_entity = None
+        self.hit_entity_centre = None
+        self.hit_entity_front_left = None
+        self.hit_entity_front = None
         self.visible_sensors = False
+        self.autopilot = False
 
         self.road_check_distance = 1.0  # How far down to cast the ray
         self.terrain = terrain_collider # Model to use for detecting collisions
@@ -20,7 +23,7 @@ class Car(Entity):
             print('Could not find model, using cube instead.')
             self.model = 'cube'
 
-        self.scale = 2
+        self.scale = 1 # lower is smaller
         self.rotation_y = 90
         self.collider = 'box'
 
@@ -63,16 +66,20 @@ class Car(Entity):
         # Check for collisions with the model
         self.check_road_surface()
 
+        if self.autopilot:
+            pass
+
     def check_road_surface(self):
         """
         Casts a ray downwards to detect the ground.
         This can be used to check for different surface types or to align the car to the ground normal.
         """
-        ray_origin = self.world_position
+        # Do raycast from the left front
+        front_left_offset = self.forward * (self.scale_z / 2)+Vec3(-0.5, 0, 0.5)
+        raycast_start = self.position + front_left_offset
 
-        # Cast a ray down from the car to the collision model
         hit_info = raycast(
-            origin=ray_origin,
+            origin=raycast_start,
             direction=self.down,
             distance=self.road_check_distance,
             ignore=[self, ],
@@ -81,15 +88,58 @@ class Car(Entity):
         )
         if hit_info.hit:
             # The ray has hit something.
-            self.hit_entity = hit_info.entity
+            self.hit_entity_front_left = hit_info.entity
         else:
-            self.hit_entity = None
+            self.hit_entity_front_left = None
 
-    def hit(self):
-        self.hit_entity.name
+        # Do raycast from the front
+        front_offset = self.forward * (self.scale_z / 2)
+        raycast_start = self.position + front_offset
+
+        hit_info = raycast(
+            origin=raycast_start,
+            direction=self.down,
+            distance=self.road_check_distance,
+            ignore=[self, ],
+            traverse_target=self.terrain, # Only checks against the collision model
+            # debug=self.visible_sensors
+        )
+        if hit_info.hit:
+            # The ray has hit something.
+            self.hit_entity_front = hit_info.entity
+        else:
+            self.hit_entity_front = None
+
+        # Raycast from the centre
+        ray_origin = self.world_position
+        hit_info = raycast(
+            origin=ray_origin,
+            direction=self.down,
+            distance=self.road_check_distance,
+            ignore=[self, ],
+            traverse_target=self.terrain, # Only checks against the collision model
+            # debug=self.visible_sensors # One at a time
+        )
+        if hit_info.hit:
+            # The ray has hit something.
+            self.hit_entity_centre = hit_info.entity
+        else:
+            self.hit_entity_centre = None
+
+    def hit_centre(self):
+        self.hit_entity_centre.name
+
+    def hit_front(self):
+        self.hit_entity_front.name
 
     def show_sensor(self, v):
         self.visible_sensors = v
+
+    def get_show_sensor(self):
+        return self.visible_sensors
+
+    def set_autopilot(self, v):
+        self.autopilot = v
 
 # Example usage:
 if __name__ == "__main__":

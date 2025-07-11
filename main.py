@@ -23,7 +23,6 @@ def make_colliders():
             position=child.getPos(),
             rotation=child.getHpr(),
             scale=child.getScale(),
-            # Make it invisible (optional - remove these lines if you want to see the colliders)
             visible=False,
             # Or make it semi-transparent for debugging
             # color=color.red,
@@ -42,7 +41,11 @@ def make_colliders():
 def update():
     x, z, y = car_entity.position
     position_display.text = f"position: ({x:.2f},{y:.2f})"
-    hits_display.text = f"hits: {getattr(car_entity.hit_entity, 'name', '')}"
+    hits_display.text = \
+        f"hits: c:{getattr(car_entity.hit_entity_centre, 'name', '')} fl:{getattr(car_entity.hit_entity_front, 'name', '')} f:{getattr(car_entity.hit_entity_front, 'name', '')}"
+    ground.visible = not car_entity.get_show_sensor()
+    model_colliders_entity.visible = not ground.visible
+    sky.visible = ground.visible
 
 def input(key):
     """Handle key press and release events"""
@@ -71,6 +74,11 @@ def input(key):
     elif key == 'g':
         car_entity.show_sensor(False)
 
+    elif key == 'z':
+        car_entity.set_autopilot(True)
+    elif key == 'x':
+        car_entity.set_autopilot(False)
+
 
 # app = Ursina()
 app = Ursina(
@@ -83,15 +91,15 @@ app = Ursina(
 )
 
 # Add a simple sky and ground for reference
-Sky()
+sky = Sky()
 ground = Entity(model='plane', name='ground', scale=100, color=color.rgb(32, 189, 28))
 
 # Editor Camera
 # editor_camera = EditorCamera(rotation_smoothing=2, panning_speed=4)
 editor_camera = SmoothEditorCamera()
-editor_camera.y = 10
+editor_camera.y = 5
 editor_camera.x = -20
-editor_camera.z = -15
+editor_camera.z = -10
 
 # Load your GLB model (example: 'cube.glb' in the same folder)
 model_name = 'assets/Models/fullmodel.glb'
@@ -109,7 +117,7 @@ model_colliders_entity = Entity(
     model=model_colliders_name,
     position=(0, 0, 0),
     scale=1,
-    color=color.green,
+    color=color.cyan,
     mode='wireframe',  # This enables wire rendering
     visible=False
 )
@@ -118,7 +126,7 @@ model_colliders_entity = Entity(
 make_colliders()
 
 # Make the car
-car_entity = Car(position=(0, 0, 0), terrain_collider=model_colliders_entity)
+car_entity = Car(position=(-30.54, 0, 22.11), terrain_collider=model_colliders_entity)
 
 # define the status lines on the screen
 position_display = Text(text='', position=window.top_left + Vec2(0.05, -0.05), scale=1.5)
