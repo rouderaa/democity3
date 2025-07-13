@@ -39,10 +39,14 @@ def make_colliders():
     print(f"Created {len(colliders)} box colliders")
 
 def update():
+    cam_pos = editor_camera.position
+    cam_rot = editor_camera.rotation
+    zoom_distance = distance(camera.world_position, editor_camera.world_position)
+    cam_display.text = f"cam: ({cam_pos.x:.2f},{cam_pos.y:.2f},{cam_pos.z:.2f}) ({editor_camera.rotation_x:.2f},{editor_camera.rotation_y:.2f},{editor_camera.rotation_z:.2f}) {zoom_distance:.2f}"
     x, z, y = car_entity.position
     position_display.text = f"position: ({x:.2f},{y:.2f})"
     hits_display.text = \
-        f"hits: c:{getattr(car_entity.hit_entity_centre, 'name', '')} fl:{getattr(car_entity.hit_entity_front, 'name', '')} f:{getattr(car_entity.hit_entity_front, 'name', '')}"
+        f"hits: c:{getattr(car_entity.c_hit, 'name', '')} fl:{getattr(car_entity.fl_hit, 'name', '')} f:{getattr(car_entity.f_hit, 'name', '')} fr:{getattr(car_entity.fr_hit, 'name', '')}"
     ground.visible = not car_entity.get_show_sensor()
     model_colliders_entity.visible = not ground.visible
     sky.visible = ground.visible
@@ -94,13 +98,6 @@ app = Ursina(
 sky = Sky()
 ground = Entity(model='plane', name='ground', scale=100, color=color.rgb(32, 189, 28))
 
-# Editor Camera
-# editor_camera = EditorCamera(rotation_smoothing=2, panning_speed=4)
-editor_camera = SmoothEditorCamera()
-editor_camera.y = 5
-editor_camera.x = -20
-editor_camera.z = -10
-
 # Load your GLB model (example: 'cube.glb' in the same folder)
 model_name = 'assets/Models/fullmodel.glb'
 model_colliders_name = 'assets/Models/fullmodel_colliders.glb'
@@ -126,9 +123,25 @@ model_colliders_entity = Entity(
 make_colliders()
 
 # Make the car
-car_entity = Car(position=(-30.54, 0, 22.11), terrain_collider=model_colliders_entity)
+car_pos=(-30.54, 0, 22.11)
+car_entity = Car(position=car_pos, terrain_collider=model_colliders_entity)
+
+# Editor Camera
+# editor_camera = EditorCamera(rotation_smoothing=2, panning_speed=4)
+editor_camera = SmoothEditorCamera()
+editor_camera.y = 5
+editor_camera.x = -20
+editor_camera.z = -10
+
+# Let camera look down at car
+d = 10
+editor_camera.position = (car_pos[0], car_pos[1] + d, car_pos[2])
+# Set rotation to look straight down
+editor_camera.rotation = (90, 0, 0)  # 90 degrees pitch to look down
+
 
 # define the status lines on the screen
+cam_display = Text(text='', position=window.top_left + Vec2(0.05, -0.0), scale=1.5)
 position_display = Text(text='', position=window.top_left + Vec2(0.05, -0.05), scale=1.5)
 hits_display = Text(text='', position=window.top_left + Vec2(0.05, -0.10), scale=1.5)
 
