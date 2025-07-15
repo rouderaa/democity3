@@ -1,4 +1,11 @@
+from python.Lib.enum import Enum
 from ursina import *
+
+class Direction(Enum):
+    NORTH = 0
+    EAST = 1
+    SOUTH = 2
+    WEST = 3
 
 class Car(Entity):
     def __init__(self, terrain_collider, **kwargs):
@@ -9,6 +16,7 @@ class Car(Entity):
         self.f_hit = None
         self.fr_hit = None
         self.c_hit = None
+        self.direction = None
 
         self.visible_sensors = False
         self.autopilot = False
@@ -68,13 +76,29 @@ class Car(Entity):
         # Check for collisions with the model
         self.check_road_surface()
 
+        self.direction = self.get_cardinal_direction()
+
         if self.autopilot:
             pass
+
+    def get_cardinal_direction(self):
+        # Normalize the angle to [0, 360)
+        angle = self.rotation_y % 360
+
+        if angle >= 357 or angle <= 3:
+            return Direction.NORTH
+        elif 87 <= angle <= 93:
+            return Direction.EAST
+        elif 177 <= angle <= 183:
+            return Direction.SOUTH
+        elif 267 <= angle <= 273:
+            return Direction.WEST
+        else:
+            return None
 
     """
     Casts a ray downwards to detect the ground.
     """
-
     def probe(self, probe_offset, probe_postfix, show_probe):
         """
         Casts a ray from a point relative to the entity's position and rotation.
@@ -157,7 +181,7 @@ class Car(Entity):
         # The 'probe' function will handle transforming these into world space.
         # We assume local +Z is forward, and local +X is to the right.
 
-        up_offset = 0.5
+        up_offset = 0.1
         # Offset for the front-left corner
         front_left_offset = Vec3(-0.75, up_offset, (self.scale_z / 2)+0.25)
         self.fl_hit = self.probe(front_left_offset, "fl", self.visible_sensors)

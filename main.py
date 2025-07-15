@@ -40,13 +40,18 @@ def make_colliders():
 
 def update():
     cam_pos = editor_camera.position
-    cam_rot = editor_camera.rotation
-    zoom_distance = distance(camera.world_position, editor_camera.world_position)
-    cam_display.text = f"cam: ({cam_pos.x:.2f},{cam_pos.y:.2f},{cam_pos.z:.2f}) ({editor_camera.rotation_x:.2f},{editor_camera.rotation_y:.2f},{editor_camera.rotation_z:.2f}) {zoom_distance:.2f}"
-    x, z, y = car_entity.position
-    position_display.text = f"position: ({x:.2f},{y:.2f})"
-    hits_display.text = \
-        f"hits: c:{getattr(car_entity.c_hit, 'name', '')} fl:{getattr(car_entity.fl_hit, 'name', '')} f:{getattr(car_entity.f_hit, 'name', '')} fr:{getattr(car_entity.fr_hit, 'name', '')}"
+    # cam_rot = editor_camera.rotation
+    if car_entity.get_show_sensor():
+        zoom_distance = distance(camera.world_position, editor_camera.world_position)
+        cam_display.text = f"cam: ({cam_pos.x:.2f},{cam_pos.y:.2f},{cam_pos.z:.2f}) ({editor_camera.rotation_x:.2f},{editor_camera.rotation_y:.2f},{editor_camera.rotation_z:.2f}) {zoom_distance:.2f}"
+        x, z, y = car_entity.position
+        position_display.text = f"position: ({x:.2f},{y:.2f})"
+        hits_display.text = \
+            f"hits: c:{getattr(car_entity.c_hit, 'name', '')} fl:{getattr(car_entity.fl_hit, 'name', '')} f:{getattr(car_entity.f_hit, 'name', '')} fr:{getattr(car_entity.fr_hit, 'name', '')}"
+    else:
+        cam_display.text = ""
+        position_display.text = ""
+        hits_display.text = ""
     ground.visible = not car_entity.get_show_sensor()
     model_colliders_entity.visible = not ground.visible
     sky.visible = ground.visible
